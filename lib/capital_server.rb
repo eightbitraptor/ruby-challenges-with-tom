@@ -9,6 +9,10 @@ class CapitalServer
     @logger = logger
   end
 
+  def on_request(&block)
+    @callback = block
+  end
+
   def start
     @thread = Thread.new do
       loop do
@@ -19,7 +23,8 @@ class CapitalServer
 
           if http?(line)
             @logger.info "CapitalServer: recvd http: #{line}"
-            client.puts(parse_request(line))
+
+            @callback.call(parse_request(line))
           else
             @logger.info "CapitalServer: recvd: #{line}"
 
@@ -34,7 +39,7 @@ class CapitalServer
   end
 
   def parse_request(line)
-    method, target, version = line.split(" ").map(&:chomp)
+    method, target, version = line.split(/\s/)
 
     { method: method, target: target, version: version }
   end

@@ -45,14 +45,17 @@ RSpec.describe "a capitalisation server" do
 
   it 'parses a http request' do
     request = "GET /index.html HTTP/1.1\r\n"
+    queue = Queue.new
+
+    @server.on_request { |request|
+      queue.push(request)
+    }
 
     socket = TCPSocket.new('localhost', 1234)
     socket.puts(request)
-    
-    request_line = socket.gets.chomp
 
-    expect(request_line).to eq(
-      {method: 'GET', target: '/index.html', version: 'HTTP/1.1'}.to_s
+    expect(queue.pop).to eq(
+      {method: 'GET', target: '/index.html', version: 'HTTP/1.1'}
     )
   end
 

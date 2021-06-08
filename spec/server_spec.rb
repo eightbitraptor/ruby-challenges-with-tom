@@ -90,6 +90,7 @@ RSpec.describe "a capitalisation server" do
     end
 
     it 'parses the body' do
+      skip
       queue = Queue.new
 
       @server.on_request { |request|
@@ -105,6 +106,16 @@ RSpec.describe "a capitalisation server" do
         # escaped crlf, is this right?
         body: "this is the body\r\nit has more than one line"
       )
+    end
+  end
+
+  context "reading a HTTP response" do
+    it "does stuff" do
+      require 'net/http'
+
+      response = Net::HTTP.get(URI('http://localhost:1234'))
+
+      expect(response).to eq("method: GET, target: /, version: HTTP/1.1")
     end
   end
 

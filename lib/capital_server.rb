@@ -14,47 +14,58 @@ class CapitalServer
   end
 
   def start
+    http = false
     @thread = Thread.new do
       loop do
         client = @server.accept
 
-        request = []
-        until client.eof?
-          line = client.readline
+        line = client.readline
 
-          if @http || http?(line)
-            @logger.info "CapitalServer: recvd http: #{line}"
-            @http = true
-            request << line
-          else
+        if http?(line)
+          parsed_request = parse_request(line, client)
+          @callback.call(parsed_request) if @callback
+
+          response_body = "method: #{parsed_request[:method]}, target: #{parsed_request[:target]}, version: #{parsed_request[:version]}"
+
+          client.print "HTTP/1.1 200 OK\r\n\r\n#{response_body}"
+        else
+          @logger.info "CapitalServer: recvd: #{line}"
+
+          response = line.upcase
+
+          @logger.info "CapitalServer: sending: #{response}"
+
+          client.puts(response)
+          until client.eof?
+            line = client.readline
+
             @logger.info "CapitalServer: recvd: #{line}"
 
             response = line.upcase
 
             @logger.info "CapitalServer: sending: #{response}"
-            client.puts line.upcase
+
+            client.puts(response)
           end
         end
 
-        @callback.call(parse_request(request)) if @http
+        client.close
       end
     end
   end
 
-  def parse_request(request)
-    request_line = request.shift
+  def parse_request(request_line, socket)
     method, target, version = request_line.split(/\s/)
 
     headers = {}
     loop do
-      line = request.shift.chomp
+      line = socket.readline.chomp
       break if line.empty?
-      header, value = line.split(':')
+      header, _match , value = line.partition(':')
       headers[header] = value.strip
     end
 
-    { method: method, target: target, version: version, 
-      headers: headers, body: request.join.chomp }
+    { method: method, target: target, version: version, headers: headers}
   end
   
   def http?(line)
@@ -66,3 +77,4 @@ class CapitalServer
     @server.close
   end
 end
+

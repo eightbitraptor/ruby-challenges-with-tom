@@ -43,20 +43,69 @@ RSpec.describe "a capitalisation server" do
     end
   end
 
-  it 'parses a http request' do
-    request = "GET /index.html HTTP/1.1\r\n"
-    queue = Queue.new
-
-    @server.on_request { |request|
-      queue.push(request)
+  context 'parsing a http request' do
+    let(:request) {
+      [
+        "GET /index.html HTTP/1.1\r\n",
+        "User-Agent: myrubytests\r\n",
+        "Accept: *\r\n",
+        "\r\n",
+        "this is the body\r\n",
+        "it has more than one line\r\n",
+      ].join
     }
 
-    socket = TCPSocket.new('localhost', 1234)
-    socket.puts(request)
+    it 'parses the request line' do
+      queue = Queue.new
 
-    expect(queue.pop).to eq(
-      {method: 'GET', target: '/index.html', version: 'HTTP/1.1'}
-    )
+      @server.on_request { |request|
+        queue.push(request)
+      }
+
+      socket = TCPSocket.new('localhost', 1234)
+      socket.puts(request)
+      # idk if i have to explicitly close the socket here?
+      socket.close
+
+      expect(queue.pop).to include(
+        method: 'GET', target: '/index.html', version: 'HTTP/1.1'
+      )
+    end
+
+    it 'parses the headers' do
+      queue = Queue.new
+
+      @server.on_request { |request|
+        queue.push(request)
+      }
+
+      socket = TCPSocket.new('localhost', 1234)
+      socket.puts(request)
+      # idk if i have to explicitly close the socket here?
+      socket.close
+
+      expect(queue.pop).to include(
+        headers: {'Accept' => '*', 'User-Agent' => 'myrubytests'}
+      )
+    end
+
+    it 'parses the body' do
+      queue = Queue.new
+
+      @server.on_request { |request|
+        queue.push(request)
+      }
+
+      socket = TCPSocket.new('localhost', 1234)
+      socket.puts(request)
+      # idk if i have to explicitly close the socket here?
+      socket.close
+
+      expect(queue.pop).to include(
+        # escaped crlf, is this right?
+        body: "this is the body\r\nit has more than one line"
+      )
+    end
   end
 
   after do

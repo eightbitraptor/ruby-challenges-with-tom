@@ -18,13 +18,14 @@ class CapitalServer
       loop do
         client = @server.accept
 
+        request = []
         until client.eof?
           line = client.readline
 
-          if http?(line)
+          if @http || http?(line)
             @logger.info "CapitalServer: recvd http: #{line}"
-
-            @callback.call(parse_request(line))
+            @http = true
+            request << line
           else
             @logger.info "CapitalServer: recvd: #{line}"
 
@@ -34,14 +35,26 @@ class CapitalServer
             client.puts line.upcase
           end
         end
+
+        @callback.call(parse_request(request)) if @http
       end
     end
   end
 
-  def parse_request(line)
-    method, target, version = line.split(/\s/)
+  def parse_request(request)
+    request_line = request.shift
+    method, target, version = request_line.split(/\s/)
 
-    { method: method, target: target, version: version }
+    headers = {}
+    loop do
+      line = request.shift.chomp
+      break if line.empty?
+      header, value = line.split(':')
+      headers[header] = value.strip
+    end
+
+    { method: method, target: target, version: version, 
+      headers: headers, body: request.join.chomp }
   end
   
   def http?(line)

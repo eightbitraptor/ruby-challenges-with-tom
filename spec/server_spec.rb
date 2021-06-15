@@ -125,13 +125,14 @@ RSpec.describe "a capitalisation server" do
       expect(response).to be_a(Net::HTTPSuccess)
     end
 
-    it "returns a list of keyboard types" do
+    it "responds with a list of html escaped keyboard types" do
       response = Net::HTTP.get(URI('http://localhost:1234/show-data'))
 
       expect(response).to eq(<<~HTML.chomp)
       <ul>
       <li>Redox <strong>60%</strong></li>
       <li>Cornelius <strong>40%</strong></li>
+      <li>&lt;italic&gt; <strong>55%</strong></li>
       </ul>
       HTML
     end

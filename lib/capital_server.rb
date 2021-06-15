@@ -30,7 +30,7 @@ class CapitalServer
             response_body = "method: #{parsed_request[:method]}, target: #{parsed_request[:target]}, version: #{parsed_request[:version]}"
           when '/show-data'
             keebs = keyboard_sizes.map do |kb|
-              "<li>#{kb[:name]} <strong>#{kb[:size]}</strong></li>"
+              "<li>#{CGI.escapeHTML(kb[:name])} <strong>#{CGI.escapeHTML(kb[:size])}</strong></li>"
             end.join("\n")
             response_body = "<ul>\n#{keebs}\n</ul>"
           end
@@ -65,7 +65,8 @@ class CapitalServer
   def keyboard_sizes
     [
       { name: 'Redox', size: '60%'},
-      { name: 'Cornelius', size: '40%'}
+      { name: 'Cornelius', size: '40%'},
+      { name: '<italic>', size: '55%' }
     ]
   end
 

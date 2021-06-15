@@ -1,6 +1,7 @@
 require 'spec_helper'
 require 'capital_server'
 require 'socket'
+require 'net/http'
 
 RSpec.describe "a capitalisation server" do
   before do
@@ -90,7 +91,7 @@ RSpec.describe "a capitalisation server" do
     end
 
     it 'parses the body' do
-      skip
+      skip "we're not reading the bod yet"
       queue = Queue.new
 
       @server.on_request { |request|
@@ -111,11 +112,28 @@ RSpec.describe "a capitalisation server" do
 
   context "reading a HTTP response" do
     it "does stuff" do
-      require 'net/http'
-
       response = Net::HTTP.get(URI('http://localhost:1234'))
 
       expect(response).to eq("method: GET, target: /, version: HTTP/1.1")
+    end
+  end
+
+  context "responding with HTML" do
+    it "responds to the show-data path" do
+      response = Net::HTTP.get_response(URI('http://localhost:1234/show-data'))
+
+      expect(response).to be_a(Net::HTTPSuccess)
+    end
+
+    it "returns a list of keyboard types" do
+      response = Net::HTTP.get(URI('http://localhost:1234/show-data'))
+
+      expect(response).to eq(<<~HTML.chomp)
+      <ul>
+      <li>Redox <strong>60%</strong></li>
+      <li>Cornelius <strong>40%</strong></li>
+      </ul>
+      HTML
     end
   end
 

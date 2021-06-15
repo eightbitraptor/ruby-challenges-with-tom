@@ -25,8 +25,15 @@ class CapitalServer
           parsed_request = parse_request(line, client)
           @callback.call(parsed_request) if @callback
 
-          response_body = "method: #{parsed_request[:method]}, target: #{parsed_request[:target]}, version: #{parsed_request[:version]}"
-
+          case parsed_request[:target]
+          when '/'
+            response_body = "method: #{parsed_request[:method]}, target: #{parsed_request[:target]}, version: #{parsed_request[:version]}"
+          when '/show-data'
+            keebs = keyboard_sizes.map do |kb|
+              "<li>#{kb[:name]} <strong>#{kb[:size]}</strong></li>"
+            end.join("\n")
+            response_body = "<ul>\n#{keebs}\n</ul>"
+          end
           client.print "HTTP/1.1 200 OK\r\n\r\n#{response_body}"
         else
           @logger.info "CapitalServer: recvd: #{line}"
@@ -51,7 +58,15 @@ class CapitalServer
 
         client.close
       end
+
     end
+  end
+
+  def keyboard_sizes
+    [
+      { name: 'Redox', size: '60%'},
+      { name: 'Cornelius', size: '40%'}
+    ]
   end
 
   def parse_request(request_line, socket)

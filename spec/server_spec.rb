@@ -119,9 +119,10 @@ RSpec.describe "a capitalisation server" do
   end
 
   context "responding with HTML" do
-    it "responds to the show-data path" do
+    it "responds to the show-data path as html" do
       response = Net::HTTP.get_response(URI('http://localhost:1234/show-data'))
 
+      expect(response['Content-Type']).to eq('text/html')
       expect(response).to be_a(Net::HTTPSuccess)
     end
 
@@ -142,3 +143,4 @@ RSpec.describe "a capitalisation server" do
     @server.stop
   end
 end
+

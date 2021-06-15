@@ -1,5 +1,6 @@
 require 'socket'
 require 'logger'
+require 'cgi'
 
 class CapitalServer
   attr_reader :request
@@ -34,7 +35,7 @@ class CapitalServer
             end.join("\n")
             response_body = "<ul>\n#{keebs}\n</ul>"
           end
-          client.print "HTTP/1.1 200 OK\r\n\r\n#{response_body}"
+          client.print "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n#{response_body}"
         else
           @logger.info "CapitalServer: recvd: #{line}"
 
